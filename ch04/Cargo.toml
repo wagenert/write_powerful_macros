@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-make-public-macro = { path = "./make-public-macro" }
+public_macro = { path = "./public_macro" }
