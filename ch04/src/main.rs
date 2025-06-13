@@ -14,6 +14,12 @@ struct Example2 {}
 #[public_macro]
 struct UnnamedExample(i32, pub &'static str);
 
+#[public_macro]
+enum ExampleEnum {
+    Variant1(i32),
+    Variant2(String),
+}
+
 fn main() {
    let e = Example {
         first: 42,

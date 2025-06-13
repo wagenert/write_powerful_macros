@@ -1,6 +1,6 @@
 extern crate core;
 use quote::quote;
-use syn::{parse_macro_input, Data::Struct, DataStruct, DeriveInput, Fields::{Named, Unnamed}, FieldsNamed, FieldsUnnamed};
+use syn::{parse_macro_input, Data::{Struct, Enum}, DataStruct, DeriveInput, Fields::{Named, Unnamed}, FieldsNamed, FieldsUnnamed, DataEnum};
 
 #[proc_macro_attribute]
 pub fn public_macro(_attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -34,6 +34,18 @@ pub fn public_macro(_attr: proc_macro::TokenStream, item: proc_macro::TokenStrea
                 pub struct #name(
                     #(#builder_fields,)*
                 );
+            }
+        },
+        Enum(DataEnum { variants, ..}) => {
+            let variant_names = variants.iter().map(|v| {
+                quote! {
+                    #v
+                }
+            });
+            quote! {
+                pub enum #name {
+                    #(#variant_names),*
+                }
             }
         },
         _ => unimplemented!("Only named and unnamed structs are supported"),
