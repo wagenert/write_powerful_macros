@@ -1,11 +1,42 @@
 extern crate core;
-use quote::quote;
+use quote::{ToTokens, quote};
 use syn::{
     Data::{Enum, Struct},
     DataEnum, DataStruct, DeriveInput,
     Fields::{Named, Unnamed},
-    FieldsNamed, FieldsUnnamed, parse_macro_input,
+    FieldsNamed, FieldsUnnamed, Ident, Visibility,
+    parse::Parse,
+    parse_macro_input,
+    punctuated::Punctuated,
+    token::Colon,
 };
+
+struct StructField {
+    name: Ident,
+    ty: Ident,
+}
+
+impl ToTokens for StructField {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let name = &self.name;
+        let ty = &self.ty;
+        quote! {
+            pub #name: #ty
+        }
+        .to_tokens(tokens);
+    }
+}
+
+impl Parse for StructField {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let _vis: Result<Visibility, _> = input.parse();
+        let list = Punctuated::<Ident, Colon>::parse_terminated(input).unwrap();
+        Ok(StructField {
+            name: list.first().unwrap().clone(),
+            ty: list.last().unwrap().clone(),
+        })
+    }
+}
 
 #[proc_macro_attribute]
 pub fn public_macro(
@@ -25,13 +56,24 @@ pub fn public_macro(
             fields: Named(FieldsNamed { ref named, .. }),
             ..
         }) => {
-            let builder_fields = named.iter().map(|f| {
+            // Original functional solution
+            /*let builder_fields = named.iter().map(|f| {
                 let field_name = &f.ident;
                 let field_type = &f.ty;
                 quote! {
                     pub #field_name: #field_type
                 }
             });
+            quote! {
+                #(#attributes)*
+                pub struct #name {
+                    #(#builder_fields,)*
+                }
+            }
+            */
+            let builder_fields = named
+                .iter()
+                .map(|f| syn::parse2::<StructField>(f.to_token_stream()).unwrap());
             quote! {
                 #(#attributes)*
                 pub struct #name {
