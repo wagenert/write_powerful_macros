@@ -1,10 +1,19 @@
 use private_macro::private;
+use function_like_compose_macro::compose;
 
 private! {
  struct Example {
      string_value: String,
      number_value: i32,
  }
+}
+
+fn add_one(n: i32) -> i32 {
+    n + 1
+}
+
+fn stringify(n: i32) -> String {
+    n.to_string()
 }
 
 fn main() {
@@ -15,4 +24,7 @@ fn main() {
 
     e.get_string_value();
     e.get_number_value();
+
+    let composed = compose!(add_one . add_one . stringify);
+    println!("{:?}", composed(5));
 }

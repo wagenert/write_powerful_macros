@@ -3,24 +3,7 @@
 version = 4
 
 [[package]]
-name = "ch05"
-version = "0.1.0"
-dependencies = [
- "function_like_compose_macro",
- "private_macro",
-]
-
-[[package]]
 name = "function_like_compose_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "private_macro"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

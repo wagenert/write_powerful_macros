@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 private_macro = { path = "./private_macro" }
+function_like_compose_macro = {path = "./function_like_compose_macro"}
