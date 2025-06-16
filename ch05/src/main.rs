@@ -1,9 +1,9 @@
-use private_macro::private;
 use function_like_compose_macro::compose;
+use private_macro::{hello_world, private};
 
 private! {
- struct Example {
-     string_value: String,
+ pub struct Example {
+     pub string_value: String,
      number_value: i32,
  }
 }
@@ -25,6 +25,9 @@ fn main() {
     e.get_string_value();
     e.get_number_value();
 
-    let composed = compose!(add_one . add_one . stringify);
+    let composed = compose!(add_one >> add_one >> stringify);
     println!("{:?}", composed(5));
+
+    hello_world!(Example);
+    e.hello_world();
 }
