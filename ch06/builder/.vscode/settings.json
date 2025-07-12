@@ -1,0 +1,7 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "builder-code/Cargo.toml",
+        "builder-macro/Cargo.toml",
+        "builder-usage/Cargo.toml"
+    ]
+}
