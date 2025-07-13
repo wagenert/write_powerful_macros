@@ -1,0 +1,7 @@
+error: proc-macro derive panicked
+ --> tests/fails/build_unnamed_fields.rs:3:10
+  |
+3 | #[derive(Builder)]
+  |          ^^^^^^^
+  |
+  = help: message: Only structs with named fields are supported
