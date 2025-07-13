@@ -6,19 +6,13 @@ pub fn original_struct_setters(
     fields: &syn::punctuated::Punctuated<syn::Field, syn::token::Comma>,
 ) -> impl Iterator<Item = TokenStream> + '_ {
     fields.iter().map(|f| {
-        let (field_name, field_type) = get_name_and_type(f);
+        let field_name = &f.ident;
         let field_name_as_str = field_name.as_ref().unwrap().to_string();
 
-        if matches_type(field_type, "String") {
-            quote! {
-                #field_name: self.#field_name.as_ref().expect(
-                    &format!("Field '{}' is not set", #field_name_as_str)).to_string()
-            }
-        } else {
-            quote! {
-                #field_name: self.#field_name.expect(
-                    &format!("Field '{}' is not set", #field_name_as_str))
-            }
+        quote! {
+            #field_name: self.#field_name.expect(
+                concat!("field not set: ", #field_name_as_str)
+            )
         }
     })
 }
@@ -29,7 +23,7 @@ pub fn builder_methods(
     fields.iter().map(|f| {
         let (field_name, field_type) = get_name_and_type(f);
         quote! {
-            pub fn #field_name(&mut self, input: #field_type) -> &mut Self {
+            pub fn #field_name(mut self, input: #field_type) -> Self {
                 self.#field_name = Some(input);
                 self
             }

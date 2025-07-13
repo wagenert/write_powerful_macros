@@ -38,7 +38,7 @@ pub fn create_builder(item: TokenStream) -> TokenStream {
         impl #builder {
             #(#builder_methods)*
 
-            pub fn build(&self) -> #name {
+            pub fn build(self) -> #name {
                 #name {
                     #(#original_struct_set_fields,)*
                 }
@@ -80,7 +80,7 @@ mod tests {
             struct StructWithNoFieldsBuilder {}
 
             impl StructWithNoFieldsBuilder {
-                pub fn build(&self) -> StructWithNoFields {
+                pub fn build(self) -> StructWithNoFields {
                     StructWithNoFields {}
                 }
             }
