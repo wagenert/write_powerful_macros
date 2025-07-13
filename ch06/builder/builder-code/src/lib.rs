@@ -112,4 +112,47 @@ mod tests {
 
         assert_eq!(name.to_string(), "StructWithNoFieldsBuilder");
     }
+
+    #[test]
+    fn builder_struct_with_fields_should_have_fields_in_output() {
+        let input = quote! {
+            struct StructWithFields {
+                field1: String,
+            }
+        };
+
+        let expected = quote! {
+            struct StructWithFieldsBuilder {
+                pub field1: Option<String>,
+            }
+
+            impl StructWithFieldsBuilder {
+
+                pub fn field1(mut self, input: String) -> Self {
+                    self.field1 = Some(input);
+                    self
+                }
+
+                pub fn build(self) -> StructWithFields {
+                    StructWithFields {
+                        field1: self.field1.expect(concat!("field not set: ", "field1")),
+                    }
+                }
+
+            }
+
+            impl StructWithFields {
+                pub fn builder() -> StructWithFieldsBuilder {
+                    StructWithFieldsBuilder {
+                        field1: None,
+                    }
+                }
+
+            }
+        };
+
+        let actual = create_builder(input);
+
+        assert_eq!(actual.to_string(), expected.to_string());
+    }
 }
