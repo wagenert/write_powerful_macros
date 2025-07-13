@@ -1,3 +1,9 @@
+mod fields;
+
+use crate::fields::{
+    builder_field_definitions, builder_init_values, builder_methods, original_struct_setters,
+};
+
 use proc_macro2::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::{Data::Struct, DataStruct, DeriveInput, Fields::Named, FieldsNamed};
@@ -16,41 +22,13 @@ pub fn create_builder(item: TokenStream) -> TokenStream {
         _ => panic!("Only structs with named fields are supported"),
     };
 
-    let builder_fields = fields.iter().map(|f| {
-        let field_name = &f.ident;
-        let field_type = &f.ty;
-        quote! {
-            #field_name: Option<#field_type>
-        }
-    });
+    let builder_fields = builder_field_definitions(fields);
 
-    let builder_inits = fields.iter().map(|f| {
-        let field_name = &f.ident;
-        quote! {
-            #field_name: None
-        }
-    });
+    let builder_inits = builder_init_values(fields);
 
-    let builder_methods = fields.iter().map(|f| {
-        let field_name = &f.ident;
-        let field_type = &f.ty;
-        quote! {
-            pub fn #field_name(&mut self, input: #field_type) -> &mut Self {
-                self.#field_name = Some(input);
-                self
-            }
-        }
-    });
+    let builder_methods = builder_methods(fields);
 
-    let set_fields = fields.iter().map(|f| {
-        let field_name = &f.ident;
-        let field_name_as_str = field_name.as_ref().unwrap().to_string();
-
-        quote! {
-            #field_name: self.#field_name.as_ref().expect(
-                &format!("Field '{}' is not set", #field_name_as_str)).to_string()
-        }
-    });
+    let original_struct_set_fields = original_struct_setters(fields);
 
     quote! {
         struct #builder {
@@ -62,7 +40,7 @@ pub fn create_builder(item: TokenStream) -> TokenStream {
 
             pub fn build(&self) -> #name {
                 #name {
-                    #(#set_fields,)*
+                    #(#original_struct_set_fields,)*
                 }
             }
         }
