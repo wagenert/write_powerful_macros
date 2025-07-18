@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "panic-to-result-macro/Cargo.toml",
+        "panic-to-result-usage/Cargo.toml"
+    ]
+}
