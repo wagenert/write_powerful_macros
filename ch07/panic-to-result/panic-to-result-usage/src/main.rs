@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn happy_path() {
-        let actual = create_person("Sam".to_string(), 22);
+        let actual = create_person("Sam".to_string(), 22).unwrap();
         assert_eq!(actual.name, "Sam".to_string());
         assert_eq!(actual.age, 22);
     }
@@ -30,6 +30,6 @@ mod tests {
     #[test]
     #[should_panic]
     fn should_panic_on_invalid_age() {
-        create_person("S".to_string(), 32);
+        create_person("S".to_string(), 32).unwrap();
     }
 }
