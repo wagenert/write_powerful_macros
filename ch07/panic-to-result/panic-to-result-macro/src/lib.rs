@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, quote};
-use syn::{ItemFn, ReturnType, Stmt};
+use syn::{Expr, ItemFn, ReturnType, Stmt, StmtMacro, token::Semi};
 
 fn signature_output_as_result(ast: &ItemFn) -> ReturnType {
     let output = match &ast.sig.output {
@@ -27,6 +27,46 @@ fn last_statement_as_result(last_statement: Option<Stmt>) -> Stmt {
     Stmt::Expr(syn::parse2(last_modified).unwrap(), None)
 }
 
+fn extract_panic_content(expr_macro: &StmtMacro) -> Option<proc_macro2::TokenStream> {
+    let does_panic = expr_macro
+        .mac
+        .path
+        .segments
+        .iter()
+        .any(|v| v.ident.to_string().eq("panic"));
+    if does_panic {
+        Some(expr_macro.mac.tokens.clone())
+    } else {
+        None
+    }
+}
+
+fn handle_expression(expression: Expr, token: Option<Semi>) -> Stmt {
+    match expression {
+        Expr::If(mut ex_if) => {
+            let new_statements = ex_if
+                .then_branch
+                .stmts
+                .into_iter()
+                .map(|s| match s {
+                    Stmt::Macro(ref expr_macro) => extract_panic_content(expr_macro)
+                        .map(|t| {
+                            quote! {
+                                return Err(#t.to_string());
+                            }
+                        })
+                        .map(syn::parse2)
+                        .map(Result::unwrap)
+                        .unwrap_or(s),
+                    _ => s,
+                })
+                .collect();
+            ex_if.then_branch.stmts = new_statements;
+            Stmt::Expr(Expr::If(ex_if), token)
+        }
+        _ => Stmt::Expr(expression, token),
+    }
+}
 #[proc_macro_attribute]
 pub fn panic_to_result(_a: TokenStream, item: TokenStream) -> TokenStream {
     let mut ast: ItemFn = syn::parse(item).unwrap();
@@ -35,5 +75,15 @@ pub fn panic_to_result(_a: TokenStream, item: TokenStream) -> TokenStream {
     ast.block
         .stmts
         .push(last_statement_as_result(last_statement));
+    let new_statments = ast
+        .block
+        .stmts
+        .into_iter()
+        .map(|s| match s {
+            Stmt::Expr(e, t) => handle_expression(e, t),
+            _ => s,
+        })
+        .collect();
+    ast.block.stmts = new_statments;
     ast.to_token_stream().into()
 }
