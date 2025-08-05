@@ -57,20 +57,6 @@ pub fn public_macro(
             ..
         }) => {
             // Original functional solution
-            /*let builder_fields = named.iter().map(|f| {
-                let field_name = &f.ident;
-                let field_type = &f.ty;
-                quote! {
-                    pub #field_name: #field_type
-                }
-            });
-            quote! {
-                #(#attributes)*
-                pub struct #name {
-                    #(#builder_fields,)*
-                }
-            }
-            */
             let builder_fields = named
                 .iter()
                 .map(|f| syn::parse2::<StructField>(f.to_token_stream()).unwrap());
