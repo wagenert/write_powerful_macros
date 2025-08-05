@@ -91,15 +91,8 @@ fn handle_expression(expression: Expr, token: Option<Semi>) -> Result<Stmt, syn:
 #[proc_macro_attribute]
 pub fn panic_to_result(_a: TokenStream, item: TokenStream) -> TokenStream {
     let mut ast: ItemFn = syn::parse(item).unwrap();
-    match signature_output_as_result(&ast) {
-        Ok(output) => ast.sig.output = output,
-        Err(err) => return err.to_compile_error().into(),
-    };
-    let last_statement = ast.block.stmts.pop();
-    ast.block
-        .stmts
-        .push(last_statement_as_result(last_statement));
-    let new_statments: Result<Vec<Stmt>, syn::Error> = ast
+    let signature_output = signature_output_as_result(&ast);
+    let statements_output: Result<Vec<Stmt>, syn::Error> = ast
         .block
         .stmts
         .into_iter()
@@ -108,9 +101,22 @@ pub fn panic_to_result(_a: TokenStream, item: TokenStream) -> TokenStream {
             _ => Ok(s),
         })
         .collect();
-    match new_statments {
-        Ok(new) => ast.block.stmts = new,
-        Err(err) => return err.to_compile_error().into(),
+
+    match (statements_output, signature_output) {
+        (Ok(new), Ok(output)) => {
+            ast.sig.output = output;
+            ast.block.stmts = new;
+        },
+        (Ok(_), Err(err)) => return err.to_compile_error().into(),
+        (Err(err), Ok(_)) => return err.to_compile_error().into(),
+        (Err(mut statement_err), Err(signature_err)) => {
+            statement_err.combine(signature_err);
+            return statement_err.to_compile_error().into();
+        },
     };
+    let last_statement = ast.block.stmts.pop();
+    ast.block
+        .stmts
+        .push(last_statement_as_result(last_statement));
     ast.to_token_stream().into()
 }
