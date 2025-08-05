@@ -15,11 +15,11 @@ fn create_person(name: String, age: u32) -> Person {
 }
 
 #[panic_to_result]
-fn create_person_with_empty_panic(name: String, age: u32) -> Person {
+fn create_person_with_two_issues(name: String, age: u32) -> Result<Person, String> {
     if age > 30 {
         panic!();
     }
-    Person { name, age }
+    Ok(Person { name, age })
 }
 
 fn main() {}
